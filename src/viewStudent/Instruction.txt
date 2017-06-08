@@ -1,0 +1,10 @@
+**MANAGEMENTSTUDENT.VIEWSTUDENT PACKAGE
+-field Map<String,Course> listCourseRegistered :  
+Khi start application thi records tu DB load vao listCourseRegistered và 
+khi click register thì bản ghi mới cũng sẽ load vào listcourseregistered => listcourseregistered giúp load vào table.  
++save records that retrieve from DB 
++save records that is already inserted into DB 
++Map: not duplicate courseID.  
+-listCourseWhenLoadDB : lưu lại trạng thái của table trước khi thêm records mới. listCourseWhenLoadDB dùng để so sánh với các records
+được thêm vào khi click Register => Khi click Send sẽ tránh bị DUPLICATE PRIMARY KEY.
+-checkInserttoDB: kiem tra gia tri cua courseID=checkInserttoDB với listCourseWhenLoadDB trước khi insert checkInserttoDB vào DB.
