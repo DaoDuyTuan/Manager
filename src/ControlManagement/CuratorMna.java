@@ -12,10 +12,14 @@ import ModelManagerment.Student;
 import ModelManagerment.Teacher;
 import ModelManagerment.Class;
 import Utinity.ConnectionDB;
+import demoComboBox.Cat;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Time;
+import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -414,43 +418,39 @@ public class CuratorMna {
         ResultSet resultFromSelectStatement = null;
         PreparedStatement selectStatement = null;
         try {
-            selectStatement = conn.prepareStatement("SELECT classID,studyTime,"
+            selectStatement = conn.prepareStatement("SELECT classID,StartTime,EndTime,"
                     + "roomAddress,studentTotal,teacherID,class.courseID,courseName FROM class"
                     + " JOIN course ON class.courseID = course.courseID");
             resultFromSelectStatement = selectStatement.executeQuery();
             
             while(resultFromSelectStatement.next()){
                 Class cla = new Class();
-                cla.setClassID(resultFromSelectStatement.getString("classID"));
-                cla.setStudyTime(resultFromSelectStatement.getString("studyTime"));
-                cla.setRoomAddress(resultFromSelectStatement.getString("roomAddress"));
-                cla.setStudentTotal(resultFromSelectStatement.getInt("studentTotal"));
-                cla.setTeacherID(resultFromSelectStatement.getString("teacherID"));
-                cla.setCourseID(resultFromSelectStatement.getString("courseID"));
-                cla.setCourseName(resultFromSelectStatement.getString("courseName"));
-                
+                setClasSet(cla,resultFromSelectStatement);
                 classSet.add(cla);
             }
         } catch (SQLException ex) {
             Logger.getLogger(CuratorMna.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    public boolean insertClass(String id,String studyTime,String roomAddress,int total,String teacherID,String courseID ){
+    public boolean insertClass(String id,String startTime,String endTime,String roomAddress,int total,String teacherID,String courseID ){
         Connection conn = ConnectionDB.openDB();
         ResultSet resultFromSelectStatement = null;
         PreparedStatement selectStatement = null;
-        Class cla = new Class(id, studyTime, roomAddress, total, teacherID, courseID, null);
+        Time sTime = convertStringToTime(startTime);
+        Time eTime = convertStringToTime(endTime);
+        Class cla = new Class(id, sTime,eTime, roomAddress, total, teacherID, courseID, null);
 
         try {
-            selectStatement = conn.prepareStatement("INSERT INTO class(classID,studyTime,"
-                    + "roomAddress,studentTotal,curatorID,teacherID,courseID) VALUES(?,?,?,?,?,?,?)");
+            selectStatement = conn.prepareStatement("INSERT INTO class(classID,StartTime,EndTime,"
+                    + "roomAddress,studentTotal,curatorID,teacherID,courseID) VALUES(?,?,?,?,?,?,?,?)");
             selectStatement.setString(1, id);
-            selectStatement.setString(2, studyTime);
-            selectStatement.setString(3, roomAddress);
-            selectStatement.setInt(4, total);
-            selectStatement.setString(5, "123");
-            selectStatement.setString(6, teacherID);
-            selectStatement.setString(7, courseID); 
+            selectStatement.setTime(2, sTime);
+            selectStatement.setTime(3, eTime);
+            selectStatement.setString(4, roomAddress);
+            selectStatement.setInt(5, total);
+            selectStatement.setString(6, "123");
+            selectStatement.setString(7, teacherID);
+            selectStatement.setString(8, courseID); 
             
             
             if(!classSet.contains(cla)){
@@ -480,19 +480,21 @@ public class CuratorMna {
         }
         return false;
     }
-    public boolean updateClass(String id,String studyTime,String room,int total,String teacherID,String courseID){
+    public boolean updateClass(String id,String startTime,String endTime,String room,int total,String teacherID,String courseID){
         Connection conn = ConnectionDB.openDB();
         ResultSet resultFromSelectStatement = null;
         PreparedStatement selectStatement = null;
-        
+        Time sTime = convertStringToTime(startTime);
+        Time eTime = convertStringToTime(endTime);
         try {
-            selectStatement = conn.prepareStatement("UPDATE class SET studyTime = ?,roomAddress = ?,studentTotal = ?,teacherID = ?,courseID = ? WHERE classID = ?");
-            selectStatement.setString(1, studyTime);
+            selectStatement = conn.prepareStatement("UPDATE class SET StartTime = ?,roomAddress = ?,studentTotal = ?,teacherID = ?,courseID = ? WHERE classID = ?,EndTime = ?");
+            selectStatement.setTime(1, sTime);
             selectStatement.setString(2, room);
             selectStatement.setInt(3, total);
             selectStatement.setString(4, teacherID);
             selectStatement.setString(5, courseID);
             selectStatement.setString(6, id);
+            selectStatement.setTime(7, eTime);
             
             if(selectStatement.executeUpdate() > 0){
                 return true;
@@ -509,23 +511,47 @@ public class CuratorMna {
         Class cla = new Class();
 
         try {
-            selectStatement = conn.prepareStatement("SELECT classID,studyTime,"
+            selectStatement = conn.prepareStatement("SELECT classID,StartTime,EndTime,"
                     + "roomAddress,studentTotal,teacherID,class.courseID FROM class"
                     + " WHERE classID = ?");
             selectStatement.setString(1, id);
             resultFromSelectStatement = selectStatement.executeQuery();
             
             if(resultFromSelectStatement.next()){
-                cla.setClassID(resultFromSelectStatement.getString("classID"));
-                cla.setStudyTime(resultFromSelectStatement.getString("studyTime"));
-                cla.setRoomAddress(resultFromSelectStatement.getString("roomAddress"));
-                cla.setStudentTotal(resultFromSelectStatement.getInt("studentTotal"));
-                cla.setTeacherID(resultFromSelectStatement.getString("teacherID"));
-                cla.setCourseID(resultFromSelectStatement.getString("courseID"));
+                setClasSet(cla, resultFromSelectStatement);
             }
             return cla;
         } catch (SQLException ex) {
             Logger.getLogger(CuratorMna.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
+    }
+
+    private void setClasSet(Class cla, ResultSet resultFromSelectStatement) {
+        DateFormat formatter  = new SimpleDateFormat("HH:mm");
+        try {
+            String sTime = formatter.format(resultFromSelectStatement.getTime("StartTime").getTime());
+            String eTime = formatter.format(resultFromSelectStatement.getTime("EndTime").getTime());
+            cla.setClassID(resultFromSelectStatement.getString("classID"));
+            cla.setStartTime(sTime);
+            cla.setEndTime(eTime);
+            cla.setRoomAddress(resultFromSelectStatement.getString("roomAddress"));
+            cla.setStudentTotal(resultFromSelectStatement.getInt("studentTotal"));
+            cla.setTeacherID(resultFromSelectStatement.getString("teacherID"));
+            cla.setCourseID(resultFromSelectStatement.getString("courseID"));
+            cla.setCourseName(resultFromSelectStatement.getString("courseName"));
+        } catch (SQLException ex) {
+            Logger.getLogger(CuratorMna.class.getName()).log(Level.SEVERE, null, ex);
+        }
+                
+    }
+    public static Time convertStringToTime(String cla){
+        DateFormat formatter  = new SimpleDateFormat("HH:mm");
+        try {
+            Time time = new Time(formatter.parse(cla).getTime());
+            return time;
+        } catch (ParseException ex) {
+            Logger.getLogger(Cat.class.getName()).log(Level.SEVERE, null, ex);
         }
         return null;
     }
