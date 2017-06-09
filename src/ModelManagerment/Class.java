@@ -5,6 +5,8 @@
  */
 package ModelManagerment;
 
+import ControlManagement.CuratorMna;
+import java.sql.Time;
 import java.util.Objects;
 
 /**
@@ -13,7 +15,8 @@ import java.util.Objects;
  */
 public class Class {
     private String classID;
-    private String studyTime;
+    private Time startTime;
+    private Time endTime;
     private String roomAddress;
     private int studentTotal;
     private String teacherID;
@@ -23,14 +26,31 @@ public class Class {
     public Class() {
     }
 
-    public Class(String classID, String studyTime, String roomAddress, int studentTotal, String teacherID, String courseID,String courseName) {
+    public Class(String classID, Time studyTime,Time endTime, String roomAddress, int studentTotal, String teacherID, String courseID,String courseName) {
         this.classID = classID;
-        this.studyTime = studyTime;
+        this.startTime = studyTime;
+        this.endTime = endTime;
         this.roomAddress = roomAddress;
         this.studentTotal = studentTotal;
         this.teacherID = teacherID;
         this.courseID = courseID;
         this.courseName = courseName;
+    }
+
+    public Time getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(String startTime) {
+        this.startTime = CuratorMna.convertStringToTime(startTime);
+    }
+
+    public Time getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(String endTime) {
+        this.endTime = CuratorMna.convertStringToTime(endTime);
     }
     
     
@@ -40,14 +60,6 @@ public class Class {
 
     public void setClassID(String classID) {
         this.classID = classID;
-    }
-
-    public String getStudyTime() {
-        return studyTime;
-    }
-
-    public void setStudyTime(String studyTime) {
-        this.studyTime = studyTime;
     }
 
     public String getRoomAddress() {
@@ -94,7 +106,8 @@ public class Class {
     public int hashCode() {
         int hash = 7;
         hash = 47 * hash + Objects.hashCode(this.courseID);
-        hash = 47 * hash + Objects.hashCode(this.studyTime);
+        //hash = 47 * hash + Objects.hashCode(this.startTime);
+        //hash = 47 * hash + Objects.hashCode(this.startTime);
         hash = 47 * hash + Objects.hashCode(this.teacherID);
         return hash;
     }
@@ -114,13 +127,22 @@ public class Class {
         if (!Objects.equals(this.courseID, other.courseID)) {
             return false;
         }
-        if (!Objects.equals(this.studyTime, other.studyTime)) {
-            return false;
-        }
         if (!Objects.equals(this.teacherID, other.teacherID)) {
             return false;
         }
-        return true;
+        if(other.startTime.compareTo(this.startTime) <= 0 && other.endTime.compareTo(this.endTime) >= 0){
+            System.out.println("hehe");
+            return true;
+        }
+        if (other.startTime.compareTo(this.startTime) <= 0 && other.startTime.compareTo(this.endTime) >= 0) {
+            System.out.println("haha");
+            return true;
+        }
+        if (other.endTime.compareTo(this.startTime) <= 0 && other.endTime.compareTo(this.endTime) >= 0) {
+            System.out.println("hihi");
+            return true;
+        }
+        return false;
     }
     
     
